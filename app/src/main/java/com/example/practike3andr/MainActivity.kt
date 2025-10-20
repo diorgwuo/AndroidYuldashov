@@ -23,6 +23,10 @@ import com.example.practike3andr.ui.screens.SearchScreen
 import com.example.practike3andr.ui.screens.ProfileScreen
 import com.example.practike3andr.ui.theme.Practike3ANDRTheme
 import com.example.practike3andr.ui.viewmodel.ActorsViewModel
+import com.example.practike3andr.ui.viewmodel.ActorsViewModelFactory
+import com.example.practike3andr.data.remote.NetworkModule
+import com.example.practike3andr.data.repository.ActorsRepositoryImpl
+import com.example.practike3andr.domain.GetActorsUseCase
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +44,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val actorsViewModel: ActorsViewModel = viewModel()
+    val actorsViewModel: ActorsViewModel = viewModel(factory = ActorsViewModelFactory(
+        GetActorsUseCase(
+            repository = ActorsRepositoryImpl(NetworkModule.actorsApi)
+        )
+    ))
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),

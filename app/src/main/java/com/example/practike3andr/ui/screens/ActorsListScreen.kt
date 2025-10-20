@@ -67,7 +67,7 @@ fun ActorsListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.refreshActors() },
+            onClick = { viewModel.refreshActors() },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = "Обновить")
