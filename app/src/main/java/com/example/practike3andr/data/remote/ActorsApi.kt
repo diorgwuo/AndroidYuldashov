@@ -60,11 +60,7 @@ interface ActorsApi {
     suspend fun getActors(
         @Query("limit") limit: Int = 10,
         @Query("page") page: Int = 1,
-        @Query("selectFields") selectFields: List<String> = listOf(
-            "id", "name", "enName", "photo", "sex", "growth", "birthday",
-            "death", "age", "birthPlace", "deathPlace", "spouses",
-            "countAwards", "profession", "facts", "movies", "updatedAt", "createdAt"
-        )
+        @Query("selectFields") selectFields: List<String>? = null
     ): RemoteActorsResponse
 }
 
