@@ -29,7 +29,7 @@ fun SearchScreen() {
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "Этот экран будет реализован позже",
+                text = "Экран поиска не используется",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(16.dp)
@@ -62,3 +62,4 @@ fun ProfileScreen() {
         }
     }
 }
+

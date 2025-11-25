@@ -21,10 +21,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,13 +58,19 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.practike3andr.data.model.Actor
 import com.example.practike3andr.data.model.Movie
+import com.example.practike3andr.ui.viewmodel.FavoritesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActorDetailsScreen(
     actor: Actor,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    favoritesViewModel: FavoritesViewModel
 ) {
+    val favorites by favoritesViewModel.favorites.collectAsState()
+    val isFavorite = favorites.any { it.id == actor.id }
+    val coroutineScope = rememberCoroutineScope()
+    
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,6 +78,25 @@ fun ActorDetailsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                if (isFavorite) {
+                                    favoritesViewModel.removeFromFavorites(actor)
+                                } else {
+                                    favoritesViewModel.addToFavorites(actor)
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Удалить из избранного" else "Добавить в избранное",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -257,7 +293,7 @@ fun BasicInfoCard(actor: Actor) {
                 InfoRow(
                     icon = Icons.Default.Person,
                     label = "Пол",
-                    value = if (sex == "male") "Мужской" else "Женский"
+                    value = if (sex.lowercase() == "male") "Мужской" else "Женский"
                 )
             }
             
@@ -336,8 +372,8 @@ fun ProfessionsCard(professions: List<com.example.practike3andr.data.model.Profe
                         )
                     ) {
                         Text(
-                            text = profession.value,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        text = profession.value ?: "",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -512,7 +548,7 @@ fun FactsCard(facts: List<com.example.practike3andr.data.model.Fact>) {
                     )
                 ) {
                     Text(
-                        text = fact.value,
+                        text = fact.value ?: "",
                         modifier = Modifier.padding(12.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onTertiaryContainer

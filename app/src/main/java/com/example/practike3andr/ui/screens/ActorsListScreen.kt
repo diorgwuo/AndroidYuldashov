@@ -11,21 +11,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,7 +53,9 @@ import com.example.practike3andr.ui.viewmodel.ActorsViewModel
 @Composable
 fun ActorsListScreen(
     viewModel: ActorsViewModel,
-    onActorClick: (Actor) -> Unit
+    hasActiveFilters: Boolean,
+    onActorClick: (Actor) -> Unit,
+    onFilterClick: () -> Unit = {}
 ) {
     val actors by viewModel.actors.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -59,9 +65,32 @@ fun ActorsListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Актеры") },
+                actions = {
+                    IconButton(onClick = onFilterClick) {
+                        Box(contentAlignment = Alignment.TopEnd) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Фильтры",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            if (hasActiveFilters) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .offset(x = 6.dp, y = (-6).dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.error,
+                                            shape = CircleShape
+                                        )
+                                )
+                            }
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         },

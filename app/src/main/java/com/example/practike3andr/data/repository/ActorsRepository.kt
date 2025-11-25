@@ -28,7 +28,7 @@ class ActorsRepositoryImpl(
 
 private fun RemoteActor.toDomain(): Actor = Actor(
     id = id,
-    name = name,
+    name = name ?: enName ?: "Неизвестный",
     enName = enName,
     photo = photo,
     sex = sex,
@@ -36,8 +36,8 @@ private fun RemoteActor.toDomain(): Actor = Actor(
     birthday = birthday,
     death = death,
     age = age,
-    birthPlace = birthPlace?.map { Place(it.value) },
-    deathPlace = deathPlace?.map { Place(it.value) },
+    birthPlace = birthPlace?.map { Place(it.value) }?.filter { it.value != null },
+    deathPlace = deathPlace?.map { Place(it.value) }?.filter { it.value != null },
     spouses = spouses?.map {
         Spouse(
             id = it.id,
@@ -50,8 +50,8 @@ private fun RemoteActor.toDomain(): Actor = Actor(
         )
     },
     countAwards = countAwards,
-    profession = profession?.map { Profession(it.value) },
-    facts = facts?.map { Fact(it.value) },
+    profession = profession?.map { Profession(it.value) }?.filter { it.value != null },
+    facts = facts?.map { Fact(it.value) }?.filter { it.value != null },
     movies = movies?.map {
         Movie(
             id = it.id,

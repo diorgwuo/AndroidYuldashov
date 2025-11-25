@@ -3,8 +3,10 @@ package com.example.practike3andr
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -19,15 +21,14 @@ import com.example.practike3andr.ui.navigation.BottomNavigationBar
 import com.example.practike3andr.ui.navigation.Screen
 import com.example.practike3andr.ui.screens.ActorDetailsScreen
 import com.example.practike3andr.ui.screens.ActorsListScreen
-import com.example.practike3andr.ui.screens.SearchScreen
+import com.example.practike3andr.ui.screens.FilterSettingsScreen
+import com.example.practike3andr.ui.screens.FavoritesScreen
 import com.example.practike3andr.ui.screens.ProfileScreen
 import com.example.practike3andr.ui.theme.Practike3ANDRTheme
 import com.example.practike3andr.ui.viewmodel.ActorsViewModel
-import com.example.practike3andr.ui.viewmodel.ActorsViewModelFactory
-import com.example.practike3andr.data.remote.NetworkModule
-import com.example.practike3andr.data.repository.ActorsRepositoryImpl
-import com.example.practike3andr.domain.GetActorsUseCase
+import com.example.practike3andr.ui.viewmodel.FavoritesViewModel
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +45,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    val actorsViewModel: ActorsViewModel = viewModel(factory = ActorsViewModelFactory(
-        GetActorsUseCase(
-            repository = ActorsRepositoryImpl(NetworkModule.actorsApi)
-        )
-    ))
+    val actorsViewModel: ActorsViewModel = viewModel()
+    val hasActiveFilters by actorsViewModel.hasActiveFilters.collectAsState()
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -64,28 +62,48 @@ fun MainScreen() {
             composable(Screen.ActorsList.route) {
                 ActorsListScreen(
                     viewModel = actorsViewModel,
+                    hasActiveFilters = hasActiveFilters,
+                    onActorClick = { actor ->
+                        navController.navigate("actor_details/${actor.id}")
+                    },
+                    onFilterClick = {
+                        navController.navigate("filter_settings")
+                    }
+                )
+            }
+            
+            composable(Screen.Favorites.route) { navBackStackEntry ->
+                val favoritesViewModel: FavoritesViewModel = hiltViewModel(navBackStackEntry)
+                FavoritesScreen(
+                    viewModel = favoritesViewModel,
                     onActorClick = { actor ->
                         navController.navigate("actor_details/${actor.id}")
                     }
                 )
             }
             
-            composable(Screen.Search.route) {
-                SearchScreen()
-            }
-            
             composable(Screen.Profile.route) {
                 ProfileScreen()
+            }
+            
+            composable("filter_settings") {
+                FilterSettingsScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
             }
             
             composable("actor_details/{actorId}") { backStackEntry ->
                 val actorId = backStackEntry.arguments?.getString("actorId")?.toIntOrNull()
                 val actors by actorsViewModel.actors.collectAsState()
                 val actor = actors.find { it.id == actorId }
+                val favoritesViewModel: FavoritesViewModel = hiltViewModel(backStackEntry)
                 
                 actor?.let {
                     ActorDetailsScreen(
                         actor = it,
+                        favoritesViewModel = favoritesViewModel,
                         onBackClick = {
                             navController.popBackStack()
                         }

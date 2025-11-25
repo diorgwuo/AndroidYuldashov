@@ -3,7 +3,7 @@ package com.example.practike3andr.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -20,18 +20,20 @@ sealed class Screen(
     val icon: ImageVector
 ) {
     object ActorsList : Screen("actors_list", "Актеры", Icons.Default.Home)
-    object Search : Screen("search", "Поиск", Icons.Default.Search)
+    object Favorites : Screen("favorites", "Избранное", Icons.Default.Star)
     object Profile : Screen("profile", "Профиль", Icons.Default.Person)
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBar(
+    navController: NavController
+) {
     val screens = listOf(
         Screen.ActorsList,
-        Screen.Search,
+        Screen.Favorites,
         Screen.Profile
     )
-    
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     

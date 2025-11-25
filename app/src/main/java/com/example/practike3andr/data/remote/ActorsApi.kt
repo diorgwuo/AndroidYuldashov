@@ -14,7 +14,7 @@ data class RemoteActorsResponse(
 
 data class RemoteActor(
     val id: Int,
-    val name: String,
+    val name: String?,
     val enName: String?,
     val photo: String?,
     val sex: String? = null,
@@ -33,7 +33,7 @@ data class RemoteActor(
     val createdAt: String? = null
 )
 
-data class RemotePlace(val value: String)
+data class RemotePlace(val value: String?)
 data class RemoteSpouse(
     val id: Int?,
     val name: String?,
@@ -43,8 +43,8 @@ data class RemoteSpouse(
     val children: Int?,
     val relation: String?
 )
-data class RemoteProfession(val value: String)
-data class RemoteFact(val value: String)
+data class RemoteProfession(val value: String?)
+data class RemoteFact(val value: String?)
 data class RemoteMovie(
     val id: Int?,
     val name: String?,

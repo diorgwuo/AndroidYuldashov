@@ -4,7 +4,7 @@ import java.util.Date
 
 data class Actor(
     val id: Int,
-    val name: String,
+    val name: String = "",
     val enName: String?,
     val photo: String?,
     val sex: String?,
@@ -24,7 +24,7 @@ data class Actor(
 )
 
 data class Place(
-    val value: String
+    val value: String?
 )
 
 data class Spouse(
@@ -38,11 +38,11 @@ data class Spouse(
 )
 
 data class Profession(
-    val value: String
+    val value: String?
 )
 
 data class Fact(
-    val value: String
+    val value: String?
 )
 
 data class Movie(
