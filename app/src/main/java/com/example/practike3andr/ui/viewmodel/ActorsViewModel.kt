@@ -23,6 +23,7 @@ class ActorsViewModel @Inject constructor(
     private val badgeStateCache: BadgeStateCache
 ) : ViewModel() {
     
+    private val _allActors = MutableStateFlow<List<Actor>>(emptyList())
     private val _actors = MutableStateFlow<List<Actor>>(emptyList())
     val actors: StateFlow<List<Actor>> = _actors.asStateFlow()
     
@@ -38,10 +39,12 @@ class ActorsViewModel @Inject constructor(
     val hasActiveFilters: StateFlow<Boolean> = badgeStateCache.hasActiveFilters
     
     init {
-        // Observe filter state changes to update badge
+        // Observe filter state changes to update badge and reapply filters
         filterPreferences.filterState.onEach { state ->
             _currentFilterState.value = state
             badgeStateCache.setActiveFiltersState(state.hasActiveFilters())
+            // Применяем фильтры к исходным данным
+            _actors.value = applyFilters(_allActors.value)
         }.launchIn(viewModelScope)
         
         loadActors()
@@ -54,14 +57,17 @@ class ActorsViewModel @Inject constructor(
                 _error.value = null
                 useCase.execute(limit, page).collect { result ->
                     result.onSuccess { list ->
+                        _allActors.value = list
                         _actors.value = applyFilters(list)
                     }.onFailure { t ->
                         _error.value = t.message ?: "Неизвестная ошибка"
+                        _allActors.value = emptyList()
                         _actors.value = emptyList()
                     }
                 }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Неизвестная ошибка"
+                _allActors.value = emptyList()
                 _actors.value = emptyList()
             } finally {
                 _isLoading.value = false

@@ -17,5 +17,11 @@ object PreferencesModule {
     fun provideFilterPreferences(@ApplicationContext context: Context): FilterPreferences {
         return FilterPreferences(context)
     }
+    
+    @Provides
+    @Singleton
+    fun provideProfilePreferences(@ApplicationContext context: Context): ProfilePreferences {
+        return ProfilePreferences(context)
+    }
 }
 

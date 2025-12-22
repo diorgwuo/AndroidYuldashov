@@ -21,6 +21,7 @@ import com.example.practike3andr.ui.navigation.BottomNavigationBar
 import com.example.practike3andr.ui.navigation.Screen
 import com.example.practike3andr.ui.screens.ActorDetailsScreen
 import com.example.practike3andr.ui.screens.ActorsListScreen
+import com.example.practike3andr.ui.screens.EditProfileScreen
 import com.example.practike3andr.ui.screens.FilterSettingsScreen
 import com.example.practike3andr.ui.screens.FavoritesScreen
 import com.example.practike3andr.ui.screens.ProfileScreen
@@ -83,7 +84,19 @@ fun MainScreen() {
             }
             
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    onEditClick = {
+                        navController.navigate("edit_profile")
+                    }
+                )
+            }
+            
+            composable("edit_profile") {
+                EditProfileScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
             }
             
             composable("filter_settings") {
