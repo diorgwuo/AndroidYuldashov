@@ -19,6 +19,7 @@ class ProfilePreferences(private val context: Context) {
         private val AVATAR_URI_KEY = stringPreferencesKey("avatar_uri")
         private val RESUME_URL_KEY = stringPreferencesKey("resume_url")
         private val POSITION_KEY = stringPreferencesKey("position")
+        private val FAVORITE_PAIR_TIME_KEY = stringPreferencesKey("favorite_pair_time")
     }
     
     val profile: Flow<UserProfile> = context.profileDataStore.data.map { preferences ->
@@ -26,7 +27,8 @@ class ProfilePreferences(private val context: Context) {
             fullName = preferences[FULL_NAME_KEY] ?: "",
             avatarUri = preferences[AVATAR_URI_KEY] ?: "",
             resumeUrl = preferences[RESUME_URL_KEY] ?: "",
-            position = preferences[POSITION_KEY] ?: ""
+            position = preferences[POSITION_KEY] ?: "",
+            favoritePairTime = preferences[FAVORITE_PAIR_TIME_KEY] ?: ""
         )
     }
     
@@ -36,6 +38,7 @@ class ProfilePreferences(private val context: Context) {
             preferences[AVATAR_URI_KEY] = profile.avatarUri
             preferences[RESUME_URL_KEY] = profile.resumeUrl
             preferences[POSITION_KEY] = profile.position
+            preferences[FAVORITE_PAIR_TIME_KEY] = profile.favoritePairTime
         }
     }
 }

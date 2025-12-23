@@ -1,7 +1,9 @@
 package com.example.practike3andr.ui.screens
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -54,7 +57,10 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.practike3andr.data.model.UserProfile
 import com.example.practike3andr.ui.viewmodel.ProfileViewModel
+import com.example.practike3andr.utils.NotificationUtils
 import java.io.File
+import java.util.Calendar
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +75,11 @@ fun EditProfileScreen(
     var position by remember { mutableStateOf(profile.position) }
     var resumeUrl by remember { mutableStateOf(profile.resumeUrl) }
     var avatarUri by remember { mutableStateOf(profile.avatarUri) }
+    var favoritePairTime by remember { mutableStateOf(profile.favoritePairTime) }
+    var timeError by remember { mutableStateOf<String?>(null) }
+    
+    // Для TimePicker
+    val calendar = remember { Calendar.getInstance() }
     
     // Временный файл для фото с камеры
     val tempImageFile = remember {
@@ -111,6 +122,22 @@ fun EditProfileScreen(
         }
     }
     
+    // Launcher для запроса разрешения на уведомления (Android 13+)
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            android.util.Log.d("EditProfileScreen", "Разрешение на уведомления получено")
+        } else {
+            android.util.Log.w("EditProfileScreen", "Разрешение на уведомления отклонено")
+            Toast.makeText(
+                context,
+                "Для работы уведомлений необходимо разрешение",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    
     // Диалог выбора источника фото
     var showImageSourceDialog by remember { mutableStateOf(false) }
     
@@ -122,6 +149,52 @@ fun EditProfileScreen(
     
     fun openCamera() {
         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+    
+    fun openTimePicker() {
+        val currentHour = if (favoritePairTime.isNotEmpty()) {
+            try {
+                favoritePairTime.split(":")[0].toInt()
+            } catch (e: Exception) {
+                calendar.get(Calendar.HOUR_OF_DAY)
+            }
+        } else {
+            calendar.get(Calendar.HOUR_OF_DAY)
+        }
+        
+        val currentMinute = if (favoritePairTime.isNotEmpty()) {
+            try {
+                favoritePairTime.split(":")[1].toInt()
+            } catch (e: Exception) {
+                calendar.get(Calendar.MINUTE)
+            }
+        } else {
+            calendar.get(Calendar.MINUTE)
+        }
+        
+        // Используем TimePickerDialog
+        android.app.TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                val timeString = String.format("%02d:%02d", hourOfDay, minute)
+                favoritePairTime = timeString
+                timeError = null
+            },
+            currentHour,
+            currentMinute,
+            true
+        ).show()
+    }
+    
+    fun validateTime(): Boolean {
+        return if (favoritePairTime.isBlank()) {
+            timeError = null // Пустое поле допустимо
+            true
+        } else {
+            val isValid = NotificationUtils.isValidTimeFormat(favoritePairTime)
+            timeError = if (isValid) null else "Некорректный формат времени"
+            isValid
+        }
     }
     
     Scaffold(
@@ -220,6 +293,30 @@ fun EditProfileScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                    
+                    OutlinedTextField(
+                        value = favoritePairTime,
+                        onValueChange = { 
+                            favoritePairTime = it
+                            timeError = null
+                            validateTime()
+                        },
+                        label = { Text("Время любимой пары (HH:mm)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { openTimePicker() }) {
+                                Icon(
+                                    painter = painterResource(android.R.drawable.ic_menu_recent_history),
+                                    contentDescription = "Выбрать время"
+                                )
+                            }
+                        },
+                        isError = timeError != null,
+                        supportingText = timeError?.let { 
+                            { Text(it) }
+                        }
+                    )
                 }
             }
             
@@ -228,17 +325,64 @@ fun EditProfileScreen(
             // Кнопка сохранения
             Button(
                 onClick = {
-                    viewModel.saveProfile(
-                        UserProfile(
+                    if (validateTime()) {
+                        val updatedProfile = UserProfile(
                             fullName = fullName,
                             position = position,
                             resumeUrl = resumeUrl,
-                            avatarUri = avatarUri
+                            avatarUri = avatarUri,
+                            favoritePairTime = favoritePairTime
                         )
-                    )
-                    onBackClick()
+                        
+                        viewModel.saveProfile(updatedProfile)
+                        
+                        // Устанавливаем уведомление, если время указано
+                        android.util.Log.e("EditProfileScreen", "=== СОХРАНЕНИЕ ПРОФИЛЯ ===")
+                        android.util.Log.e("EditProfileScreen", "Время: $favoritePairTime, Имя: '$fullName'")
+                        
+                        if (favoritePairTime.isNotEmpty()) {
+                            android.util.Log.e("EditProfileScreen", "Устанавливаем уведомление...")
+                            
+                            // Используем имя пользователя или значение по умолчанию
+                            val userName = if (fullName.isNotEmpty()) fullName else "Пользователь"
+                            android.util.Log.e("EditProfileScreen", "Имя для уведомления: '$userName'")
+                            
+                            // Отменяем предыдущее уведомление
+                            NotificationUtils.cancelPairNotification(context)
+                            
+                            // Устанавливаем новое уведомление
+                            try {
+                                NotificationUtils.schedulePairNotification(
+                                    context,
+                                    favoritePairTime,
+                                    userName
+                                )
+                                
+                                Toast.makeText(
+                                    context,
+                                    "Профиль сохранен! Уведомление установлено на $favoritePairTime",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } catch (e: Exception) {
+                                android.util.Log.e("EditProfileScreen", "ОШИБКА при установке уведомления", e)
+                                e.printStackTrace()
+                                Toast.makeText(
+                                    context,
+                                    "Ошибка: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        } else {
+                            // Если время удалено, отменяем уведомление
+                            android.util.Log.e("EditProfileScreen", "Время не указано, отменяем уведомление")
+                            NotificationUtils.cancelPairNotification(context)
+                        }
+                        
+                        onBackClick()
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = timeError == null
             ) {
                 Text("Готово")
             }

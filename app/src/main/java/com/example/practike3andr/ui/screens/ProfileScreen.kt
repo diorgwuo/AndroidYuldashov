@@ -139,6 +139,11 @@ fun ProfileScreen(
                         value = profile.resumeUrl.ifEmpty { "Не указано" }
                     )
                     
+                    ProfileField(
+                        label = "Время любимой пары",
+                        value = profile.favoritePairTime.ifEmpty { "Не указано" }
+                    )
+                    
                     Button(
                         onClick = {
                             if (profile.resumeUrl.isNotEmpty() && !isDownloading) {
